@@ -1,6 +1,5 @@
 'use client';
 
-import QRGenerator from '@/components/QRGenerator';
 import Link from 'next/link';
 import { 
   Check, 
@@ -13,21 +12,18 @@ import {
   Star,
   Github,
   MessageCircle,
-  ArrowRight
+  ArrowRight,
+  Menu
 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div style={{ background: '#020617' }}>
       {/* Navbar */}
-      <nav style={{ 
-        position: 'sticky', 
-        top: 0, 
-        zIndex: 100, 
-        background: 'rgba(2, 6, 23, 0.8)', 
-        backdropFilter: 'blur(12px)', 
-        borderBottom: '1px solid var(--border-glass)' 
-      }}>
+      <nav className="navbar-glass">
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -35,7 +31,9 @@ export default function Home() {
             </div>
             <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>QR Premium</span>
           </div>
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+          
+          {/* Desktop Menu */}
+          <div className="desktop-menu" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
             <a href="#features" className="nav-link">Recursos</a>
             <a href="#pricing" className="nav-link">Preços</a>
             <a href="#faq" className="nav-link">FAQ</a>
@@ -43,7 +41,31 @@ export default function Home() {
               Painel Cliente
             </Link>
           </div>
+
+          {/* Mobile Menu Button */}
+          <div className="mobile-menu-btn" style={{ display: 'none' }}>
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
+            >
+              <Menu size={28} />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {isMobileMenuOpen && (
+          <div className="mobile-dropdown" style={{ padding: '1rem 2rem', background: 'rgba(2, 6, 23, 0.95)', borderBottom: '1px solid var(--border-glass)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <a href="#features" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Recursos</a>
+              <a href="#pricing" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Preços</a>
+              <a href="#faq" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>FAQ</a>
+              <Link href="/dashboard" className="btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                Entrar / Painel Cliente
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       <main>
@@ -101,9 +123,9 @@ export default function Home() {
               <strong> 40 dias gratuitos</strong> para você testar todas as funcionalidades.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-              <a href="#generator" className="btn" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
+              <Link href="/dashboard" className="btn" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
                 Gerar Gratuitamente <ChevronRight size={20} />
-              </a>
+              </Link>
               <Link href="/dashboard" className="btn" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-glass)' }}>
                 Ver Meus Códigos
               </Link>
@@ -135,16 +157,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Generator Section */}
-        <section id="generator" style={{ padding: '4rem 2rem 8rem 2rem' }}>
-          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 className="section-title">Crie seu QR Code agora</h2>
-              <p style={{ color: '#94a3b8' }}>Selecione o tipo e preencha os dados. Simples assim.</p>
-            </div>
-            <QRGenerator />
-          </div>
-        </section>
 
         {/* Features Section */}
         <section id="features" style={{ padding: '8rem 2rem', background: 'rgba(255,255,255,0.02)' }}>

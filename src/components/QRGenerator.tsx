@@ -280,7 +280,7 @@ export default function QRGenerator() {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+            <div className="qr-type-selector" style={{ marginBottom: '2rem' }}>
                 {[
                     { id: 'URL', label: 'Link/Texto', icon: <LinkIcon size={20} /> },
                     { id: 'PIX', label: 'PIX', icon: <CreditCard size={20} /> },
@@ -291,24 +291,13 @@ export default function QRGenerator() {
                     { id: 'WHATSAPP', label: 'WhatsApp', icon: <MessageCircle size={20} /> },
                     { id: 'SMS', label: 'SMS', icon: <Send size={20} /> },
                     { id: 'EMAIL', label: 'E-mail', icon: <Mail size={20} /> },
-                    { id: 'LOCATION', label: 'Localização', icon: <MapPin size={20} /> },
-                    { id: 'AI', label: 'AI Assistant', icon: <Sparkles size={20} /> },
+                    { id: 'LOCATION', label: 'Local.', icon: <MapPin size={20} /> },
+                    { id: 'AI', label: 'AI Assist.', icon: <Sparkles size={20} /> },
                 ].map((t) => (
                     <button
                         key={t.id}
                         onClick={() => setType(t.id as QRType)}
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            padding: '1rem',
-                            borderRadius: '0.75rem',
-                            border: type === t.id ? '2px solid var(--primary)' : '1px solid var(--border-glass)',
-                            background: type === t.id ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
-                            cursor: 'pointer',
-                            color: type === t.id ? 'var(--primary)' : '#94a3b8',
-                            transition: 'all 0.3s'
-                        }}
+                        className={`qr-type-btn ${type === t.id ? 'active' : ''}`}
                     >
                         {t.icon}
                         <span style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: 'bold' }}>{t.label}</span>

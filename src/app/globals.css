@@ -132,3 +132,91 @@ body {
   color: #94a3b8;
   line-height: 1.6;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .glass-card {
+    padding: 1.5rem;
+  }
+  
+  /* Navbar Adjustments */
+  .desktop-menu {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: block !important;
+  }
+  
+  /* Layout adjustments for very small screens */
+  h1 {
+    font-size: clamp(2rem, 10vw, 3rem) !important;
+  }
+}
+
+.navbar-glass {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(2, 6, 23, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-glass);
+}
+
+/* QR Type Selector Responsiveness */
+.qr-type-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+}
+
+.qr-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-glass);
+  background: transparent;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: all 0.3s;
+}
+
+.qr-type-btn.active {
+  border: 2px solid var(--primary);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .qr-type-selector {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    margin-left: -1rem; /* Full bleed on mobile */
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .qr-type-selector::-webkit-scrollbar {
+    height: 4px;
+    display: none; /* Hide scrollbar completely to look cleaner */
+  }
+
+  .qr-type-btn {
+    min-width: 100px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 0.75rem 0.5rem;
+  }
+}
