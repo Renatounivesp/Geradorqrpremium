@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  role          String   @default("USER") // USER, ADMIN
+  createdAt     DateTime @default(now())
+  trialEndsAt   DateTime
+  isSubscribed  Boolean  @default(false)
+  lastPaymentAt DateTime?
+  qrcodes       QRCode[]
+}
+
+model QRCode {
+  id          String   @id @default(cuid())
+  name        String
+  content     String   // For static, this is the data. For dynamic, this is the redirect URL (internal).
+  category    String?  @default("URL")
+  createdAt   DateTime @default(now())
+  isActive    Boolean  @default(true)
+  isDynamic   Boolean  @default(false)
+  redirectUrl String?  // The original destination for dynamic QRs
+  scans       Int      @default(0)
+  
+  // Customization
+  fgColor     String?  @default("#000000")
+  bgColor     String?  @default("#FFFFFF")
+  logoUrl     String?
+  frameStyle  String?  @default("none")
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}
