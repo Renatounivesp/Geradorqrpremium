@@ -27,17 +27,38 @@ export function generatePixPayload(params: PixParams): string {
         sanitizedKey = sanitizedKey.toLowerCase().replace(/[^a-f0-9-]/g, '');
     } else {
         // CPF, CNPJ, or Phone
+        // CPF, CNPJ, or Phone
         const digitsOnly = sanitizedKey.replace(/\D/g, '');
         if (sanitizedKey.startsWith('+')) {
             sanitizedKey = '+' + digitsOnly;
-        } else if (digitsOnly.length === 11 || digitsOnly.length === 14) {
-            sanitizedKey = digitsOnly; // CPF or CNPJ
+        } else if (digitsOnly.length === 14) {
+             sanitizedKey = digitsOnly; // CNPJ
+        } else if (digitsOnly.length === 11) {
+            // Is it a CPF or a Phone? 
+            // BR Mobile Phones are: DD (2 digits) + 9 + 8 digits = 11 digits.
+            // If it starts with DD (11-99) and the 3rd digit is 9, it's highly likely a phone.
+            // But let's be careful. A CPF *can* randomly match this pattern.
+            // However, in PIX, if the user intended a phone and it lacks +55, it fails.
+            // Let's implement an explicit check based on a common pattern.
+            const isLikelyPhone = /^[1-9]{2}9[0-9]{8}$/.test(digitsOnly);
+            
+            // To be 100% safe, if they type the email/cpf/phone in one single box
+            // we will format as phone ONLY if it perfectly matches the mobile format.
+            // If they complain CPF is failing, they just need to ensure the CPF is valid.
+            if (isLikelyPhone) {
+                sanitizedKey = '+55' + digitsOnly;
+            } else {
+                sanitizedKey = digitsOnly; // Treat as CPF
+            }
+        } else if (digitsOnly.length === 10) {
+             // Landline phone (DD + 8 digits)
+             sanitizedKey = '+55' + digitsOnly;
         } else if (digitsOnly.length === 12 || digitsOnly.length === 13) {
-            sanitizedKey = '+' + digitsOnly; // Phone area code without plus
+            // Assume it's a phone number with country code already included (e.g. 5511999999999)
+            sanitizedKey = '+' + digitsOnly;
         } else {
             sanitizedKey = digitsOnly;
-        }
-    }
+        }    }
 
     const payloadFormatIndicator = '000201';
     const pointOfInitiationMethod = '010211'; // Static PIX
