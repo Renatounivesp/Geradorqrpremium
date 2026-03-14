@@ -14,7 +14,12 @@ export async function GET(req: NextRequest) {
             where: { email },
             include: {
                 qrcodes: {
-                    orderBy: { createdAt: 'desc' }
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        scansList: {
+                            orderBy: { scannedAt: 'asc' }
+                        }
+                    }
                 }
             }
         })

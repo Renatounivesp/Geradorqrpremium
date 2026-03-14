@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { QrCode, CreditCard, Clock, CheckCircle, AlertCircle, LogOut, ExternalLink, Trash2, Edit2, Save, X } from 'lucide-react'
+import { QrCode, CreditCard, Clock, CheckCircle, AlertCircle, LogOut, ExternalLink, Trash2, Edit2, Save, X, BarChart3, Smartphone, Monitor } from 'lucide-react'
 import QRGenerator from '@/components/QRGenerator'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts'
+
 
 export default function UserDashboard() {
     const [email, setEmail] = useState('')
@@ -13,6 +15,9 @@ export default function UserDashboard() {
     const [message, setMessage] = useState('')
     const [editingQrId, setEditingQrId] = useState<string | null>(null)
     const [newRedirectUrl, setNewRedirectUrl] = useState('')
+    const [chartData, setChartData] = useState<any[]>([])
+    const [deviceData, setDeviceData] = useState<any[]>([])
+
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -128,6 +133,50 @@ export default function UserDashboard() {
         }
     }, [])
 
+    useEffect(() => {
+        if (user?.qrcodes) {
+            // Aggregate scans by date (last 7 days)
+            const last7Days = Array.from({length: 7}, (_, i) => {
+                const d = new Date()
+                d.setDate(d.getDate() - (6 - i))
+                return {
+                    date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                    fullDate: d.toDateString(),
+                    scans: 0
+                }
+            })
+            
+            let desktop = 0;
+            let mobile = 0;
+            
+            user.qrcodes.forEach((qr: any) => {
+                if (qr.scansList && Array.isArray(qr.scansList)) {
+                    qr.scansList.forEach((scan: any) => {
+                        // Count devices
+                        if (scan.device?.toLowerCase() === 'mobile') mobile++
+                        else desktop++
+                        
+                        // Count dates
+                        const scanDate = new Date(scan.scannedAt)
+                        const dateStr = scanDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                        
+                        const dayItem = last7Days.find(d => d.date === dateStr)
+                        if (dayItem) {
+                            dayItem.scans += 1
+                        }
+                    })
+                }
+            })
+            
+            setChartData(last7Days)
+            setDeviceData([
+                { name: 'Mobile', value: mobile, color: '#10b981', icon: <Smartphone size={16}/> },
+                { name: 'Desktop', value: desktop, color: '#3b82f6', icon: <Monitor size={16}/> }
+            ])
+        }
+    }, [user])
+
+
     if (!isLoggedIn) {
         return (
             <main style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -230,18 +279,73 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Statistics Card */}
-                <div className="glass-card">
-                    <h3 style={{ marginBottom: '1.5rem' }}>Estatísticas</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>QR Codes Gerados</span>
-                            <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{user.qrcodes?.length || 0}</span>
+                <div className="glass-card" style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><BarChart3 size={20} /> Visão Geral de Acessos</h3>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>QRs Ativos</span>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{user.qrcodes?.length || 0}</span>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Total de Scans</span>
+                                <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                                    {user.qrcodes?.reduce((acc: number, qr: any) => acc + (qr.scans || 0), 0) || 0}
+                                </span>
+                            </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Total de Scans</span>
-                            <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                                {user.qrcodes?.reduce((acc: number, qr: any) => acc + (qr.scans || 0), 0) || 0}
-                            </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+                        {/* Weekly Chart */}
+                        <div>
+                            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>Últimos 7 dias</p>
+                            <div style={{ height: '200px', width: '100%' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorScans" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.8}/>
+                                                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
+                                        <Tooltip 
+                                            contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '0.5rem', fontSize: '0.85rem' }}
+                                            itemStyle={{ color: '#10b981' }}
+                                            labelStyle={{ color: '#94a3b8', marginBottom: '0.25rem' }}
+                                        />
+                                        <Area type="monotone" dataKey="scans" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorScans)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* Device Chart */}
+                        <div>
+                            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>Dispositivos</p>
+                            <div style={{ height: '200px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {deviceData.reduce((a, b) => a + b.value, 0) > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={deviceData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" stroke="#fff" fontSize={12} tickLine={false} axisLine={false} width={80} />
+                                            <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '0.5rem', fontSize: '0.85rem' }} />
+                                            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24} label={{ position: 'right', fill: '#fff', fontSize: 12 }}>
+                                                {deviceData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div style={{ textAlign: 'center', color: '#64748b' }}>
+                                        <Smartphone size={32} style={{ opacity: 0.2, marginBottom: '0.5rem' }} />
+                                        <p style={{ fontSize: '0.8rem' }}>Sem dados suficientes ainda.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

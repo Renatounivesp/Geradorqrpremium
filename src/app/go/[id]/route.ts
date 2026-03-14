@@ -29,10 +29,37 @@ export async function GET(
             return NextResponse.redirect(new URL('/dashboard?error=subscription_expired', req.url))
         }
 
-        // Increment scan count
+        // Capture Metadata
+        const userAgent = req.headers.get('user-agent') || ''
+        const ipAddress = req.headers.get('x-forwarded-for') || 'unknown'
+        
+        // Simple User Agent Parsing
+        let device = 'Desktop'
+        if (/Mobile|Android|iP(hone|od|ad)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(userAgent)) {
+            device = 'Mobile'
+        }
+        
+        let os = 'Unknown'
+        if (userAgent.includes('Windows')) os = 'Windows'
+        else if (userAgent.includes('Mac OS')) os = 'Mac OS'
+        else if (userAgent.includes('Linux')) os = 'Linux'
+        else if (userAgent.includes('Android')) os = 'Android'
+        else if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) os = 'iOS'
+
+        // Log the detailed scan AND increment the total count counter
         await prisma.qRCode.update({
             where: { id },
-            data: { scans: { increment: 1 } }
+            data: { 
+                scans: { increment: 1 },
+                scansList: {
+                    create: {
+                        ipAddress,
+                        userAgent,
+                        device,
+                        os
+                    }
+                }
+            }
         })
 
         // Redirect to the real destination

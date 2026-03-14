@@ -32,6 +32,7 @@ model QRCode {
   isDynamic   Boolean  @default(false)
   redirectUrl String?  // The original destination for dynamic QRs
   scans       Int      @default(0)
+  scansList   QRScan[] // Relation for advanced analytics
   
   // Customization
   fgColor     String?  @default("#000000")
@@ -41,4 +42,17 @@ model QRCode {
   
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+}
+
+model QRScan {
+  id        String   @id @default(cuid())
+  qrCodeId  String
+  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  scannedAt DateTime @default(now())
+  
+  // Metadados do clique
+  ipAddress String?  // To estimate city/country later if needed
+  userAgent String?  // Raw browser user agent string
+  device    String?  // 'Mobile' or 'Desktop'
+  os        String?  // 'iOS', 'Android', 'Windows', 'Mac', etc
 }
