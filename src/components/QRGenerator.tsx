@@ -105,11 +105,15 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
             } else if (type === 'CNPJ') {
                 finalContent = `https://consultacnpj.com/cnpj/${cnpj.replace(/\D/g, '')}`;
             } else if (type === 'WHATSAPP') {
-                finalContent = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+                let cleanPhone = phone.replace(/\D/g, '');
+                if (cleanPhone.length === 10 || cleanPhone.length === 11) cleanPhone = '55' + cleanPhone;
+                finalContent = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
             } else if (type === 'SMS') {
-                finalContent = `SMSTO:${phone.replace(/\D/g, '')}:${message}`;
+                let cleanPhone = phone.replace(/\D/g, '');
+                if (cleanPhone.length === 10 || cleanPhone.length === 11) cleanPhone = '+55' + cleanPhone;
+                finalContent = `SMSTO:${cleanPhone}:${message}`;
             } else if (type === 'EMAIL') {
-                finalContent = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                finalContent = `mailto:${vEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             } else if (type === 'LOCATION') {
                 finalContent = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
             } else if (type === 'AI') {
