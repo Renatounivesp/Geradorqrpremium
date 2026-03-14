@@ -14,13 +14,25 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing userId or action' }, { status: 400 })
         }
 
-        const isSubscribed = action === 'activate'
+        let isSubscribed = false
+        let isLifetime = false
+
+        if (action === 'activate') {
+            isSubscribed = true
+        } else if (action === 'lifetime_grant') {
+            isSubscribed = true
+            isLifetime = true
+        } else if (action === 'lifetime_revoke') {
+            isSubscribed = false
+            isLifetime = false
+        }
 
         const user = await prisma.user.update({
             where: { id: userId },
             data: {
                 isSubscribed,
-                lastPaymentAt: isSubscribed ? new Date() : undefined
+                isLifetime,
+                lastPaymentAt: action.includes('activate') ? new Date() : undefined
             }
         })
 

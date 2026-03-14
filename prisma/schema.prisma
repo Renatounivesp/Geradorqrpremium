@@ -18,6 +18,7 @@ model User {
   createdAt     DateTime @default(now())
   trialEndsAt   DateTime
   isSubscribed  Boolean  @default(false)
+  isLifetime    Boolean  @default(false)
   lastPaymentAt DateTime?
   qrcodes       QRCode[]
 }

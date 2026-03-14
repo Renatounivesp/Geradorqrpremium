@@ -45,9 +45,9 @@ export default function AdminDashboard() {
         }
     }, [])
 
-    const handleSubscriptionToggle = async (userId: string, currentStatus: boolean) => {
+    const handleSubscriptionToggle = async (userId: string, currentStatus: boolean, customAction?: string) => {
         try {
-            const action = currentStatus ? 'cancel' : 'activate'
+            const action = customAction || (currentStatus ? 'cancel' : 'activate')
             const res = await fetch('/api/admin/subscription', {
                 method: 'POST',
                 headers: { 
@@ -58,8 +58,23 @@ export default function AdminDashboard() {
             })
 
             if (res.ok) {
+                // Determine new state based on action
+                let isSubscribed = !currentStatus;
+                let isLifetime = false;
+
+                if (action === 'lifetime_grant') {
+                    isSubscribed = true;
+                    isLifetime = true;
+                } else if (action === 'lifetime_revoke') {
+                    isSubscribed = false;
+                    isLifetime = false;
+                } else if (action === 'cancel') {
+                    // if cancelling a regular sub, ensure lifetime is false
+                    isLifetime = false;
+                }
+
                 setUsers(prev => prev.map(u =>
-                    u.id === userId ? { ...u, isSubscribed: !currentStatus } : u
+                    u.id === userId ? { ...u, isSubscribed, isLifetime } : u
                 ))
             } else {
                 const data = await res.json()
@@ -102,9 +117,10 @@ export default function AdminDashboard() {
 
     const stats = {
         totalUsers: users.length,
-        activeSubs: users.filter(u => u.isSubscribed).length,
+        activeSubs: users.filter(u => u.isSubscribed && !u.isLifetime).length,
+        lifetimeUsers: users.filter(u => u.isLifetime).length,
         totalQrs: users.reduce((acc, u) => acc + (u._count?.qrcodes || 0), 0),
-        estimatedRevenue: users.filter(u => u.isSubscribed).length * 9.90
+        estimatedRevenue: users.filter(u => u.isSubscribed && !u.isLifetime).length * 9.90
     }
 
     return (
@@ -125,6 +141,10 @@ export default function AdminDashboard() {
                 <div className="glass-card" style={{ textAlign: 'center' }}>
                     <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 0.5rem 0' }}>Assinantes Ativos</p>
                     <p style={{ fontSize: '1.8rem', fontWeight: 'bold', margin: 0, color: '#10b981' }}>{stats.activeSubs}</p>
+                </div>
+                <div className="glass-card" style={{ textAlign: 'center' }}>
+                    <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 0.5rem 0' }}>Vitalícios</p>
+                    <p style={{ fontSize: '1.8rem', fontWeight: 'bold', margin: 0, color: '#fbbf24' }}>{stats.lifetimeUsers}</p>
                 </div>
                 <div className="glass-card" style={{ textAlign: 'center' }}>
                     <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 0.5rem 0' }}>QR Codes Totais</p>
@@ -153,8 +173,8 @@ export default function AdminDashboard() {
                             const now = new Date()
                             const trialEnds = new Date(user.trialEndsAt)
                             const isTrialActive = now <= trialEnds
-                            const status = user.isSubscribed ? 'Assinante' : (isTrialActive ? 'Trial Ativo' : 'Expirado')
-                            const statusColor = user.isSubscribed ? '#10b981' : (isTrialActive ? '#3b82f6' : '#ef4444')
+                            const status = user.isLifetime ? 'VITALÍCIO' : (user.isSubscribed ? 'Assinante' : (isTrialActive ? 'Trial Ativo' : 'Expirado'))
+                            const statusColor = user.isLifetime ? '#fbbf24' : (user.isSubscribed ? '#10b981' : (isTrialActive ? '#3b82f6' : '#ef4444'))
 
                             return (
                                 <tr key={user.id} style={{ borderBottom: '1px solid var(--border-glass)' }}>
@@ -162,19 +182,43 @@ export default function AdminDashboard() {
                                     <td style={{ padding: '1rem' }}>{user.email}</td>
                                     <td style={{ padding: '1rem' }}>{user._count?.qrcodes || 0}</td>
                                     <td style={{ padding: '1rem' }}>{trialEnds.toLocaleDateString('pt-BR')}</td>
-                                    <td style={{ padding: '1rem', color: statusColor, fontWeight: 'bold' }}>{status}</td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <button
-                                            className="btn"
-                                            style={{
-                                                padding: '0.5rem 1rem',
-                                                fontSize: '0.8rem',
-                                                background: user.isSubscribed ? '#ef4444' : 'var(--primary)'
-                                            }}
-                                            onClick={() => handleSubscriptionToggle(user.id, user.isSubscribed)}
-                                        >
-                                            {user.isSubscribed ? 'Cancelar' : 'Ativar'}
-                                        </button>
+                                    <td style={{ padding: '1rem', color: statusColor, fontWeight: 'bold' }}>
+                                        {user.isLifetime && <span style={{ marginRight: '0.25rem' }}>🌟</span>}
+                                        {status}
+                                    </td>
+                                    <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
+                                        {user.isLifetime ? (
+                                            <button
+                                                className="btn"
+                                                style={{ padding: '0.5rem', fontSize: '0.75rem', background: '#334155', color: 'white' }}
+                                                onClick={() => handleSubscriptionToggle(user.id, user.isSubscribed, 'lifetime_revoke')}
+                                                title="Revogar Vitalício"
+                                            >
+                                                Remover Vitalício
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    className="btn"
+                                                    style={{
+                                                        padding: '0.5rem 1rem',
+                                                        fontSize: '0.8rem',
+                                                        background: user.isSubscribed ? '#ef4444' : 'var(--primary)'
+                                                    }}
+                                                    onClick={() => handleSubscriptionToggle(user.id, user.isSubscribed)}
+                                                >
+                                                    {user.isSubscribed ? 'Cancelar' : 'Ativar'}
+                                                </button>
+                                                <button
+                                                    className="btn"
+                                                    style={{ padding: '0.5rem', fontSize: '0.75rem', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+                                                    onClick={() => handleSubscriptionToggle(user.id, user.isSubscribed, 'lifetime_grant')}
+                                                    title="Dar Acesso Vitalício"
+                                                >
+                                                    Dar Vitalício
+                                                </button>
+                                            </>
+                                        )}
                                     </td>
                                 </tr>
                             )
