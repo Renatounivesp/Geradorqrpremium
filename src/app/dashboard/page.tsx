@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { QrCode, CreditCard, Clock, CheckCircle, AlertCircle, LogOut, ExternalLink, Trash2, Edit2, Save, X } from 'lucide-react'
+import QRGenerator from '@/components/QRGenerator'
 
 export default function UserDashboard() {
     const [email, setEmail] = useState('')
@@ -246,8 +247,22 @@ export default function UserDashboard() {
                 </div>
             </div>
 
-            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <QrCode size={24} /> Seus QR Codes
+            <div style={{ marginBottom: '4rem' }}>
+                <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <QrCode size={24} /> Criar Novo QR Code
+                </h2>
+                <div style={{ background: 'rgba(2, 6, 23, 0.5)', borderRadius: '1.5rem', padding: '1rem', border: '1px solid var(--border-glass)' }}>
+                    <QRGenerator defaultEmail={user.email} onGenerated={() => {
+                        // Refresh user data after generating to update the list and stats
+                        fetch(`/api/user?email=${user.email}`)
+                            .then(res => res.json())
+                            .then(data => setUser(data))
+                    }} />
+                </div>
+            </div>
+
+            <h2 id="my-qrs" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <QrCode size={24} /> Seus QR Codes Salvos
             </h2>
 
             {user.qrcodes?.length > 0 ? (
@@ -330,7 +345,7 @@ export default function UserDashboard() {
                 <div className="glass-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
                     <QrCode size={48} color="#1e293b" style={{ marginBottom: '1.5rem' }} />
                     <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Você ainda não gerou nenhum QR Code.</p>
-                    <Link href="/" className="btn" style={{ textDecoration: 'none' }}>Gerar meu primeiro QR</Link>
+                    <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn">Criar meu primeiro QR</button>
                 </div>
             )}
         </main>

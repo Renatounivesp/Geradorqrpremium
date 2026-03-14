@@ -22,13 +22,13 @@ import { generatePixPayload } from '@/lib/pix';
 
 type QRType = 'URL' | 'PIX' | 'WIFI' | 'PHONE' | 'AI' | 'VCARD' | 'CNPJ' | 'WHATSAPP' | 'SMS' | 'EMAIL' | 'LOCATION';
 
-export default function QRGenerator() {
+export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaultEmail?: string, onGenerated?: () => void }) {
     const [type, setType] = useState<QRType>('URL');
     const [content, setContent] = useState('');
     const [qrCode, setQrCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(defaultEmail);
     const [qrName, setQrName] = useState('');
     const [isDynamic, setIsDynamic] = useState(true);
 
@@ -191,6 +191,7 @@ export default function QRGenerator() {
             } else {
                 setQrCode(dataUrl);
             }
+            if (onGenerated) onGenerated();
         } catch (err: any) {
             setError(err.message || 'Erro ao gerar QR Code.');
         } finally {
