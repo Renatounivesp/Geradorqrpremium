@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { QrCode, CreditCard, Clock, CheckCircle, AlertCircle, LogOut, ExternalLink, Trash2, Edit2, Save, X, BarChart3, Smartphone, Monitor } from 'lucide-react'
+import { QrCode, CreditCard, Clock, CheckCircle, AlertCircle, LogOut, ExternalLink, Trash2, Edit2, Save, X, BarChart3, Smartphone, Monitor, Download, Eye } from 'lucide-react'
 import QRGenerator from '@/components/QRGenerator'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts'
+import QRCode from 'qrcode'
+
 
 
 export default function UserDashboard() {
@@ -17,6 +19,9 @@ export default function UserDashboard() {
     const [newRedirectUrl, setNewRedirectUrl] = useState('')
     const [chartData, setChartData] = useState<any[]>([])
     const [deviceData, setDeviceData] = useState<any[]>([])
+    const [selectedQr, setSelectedQr] = useState<any | null>(null)
+    const [previewQrDataUrl, setPreviewQrDataUrl] = useState<string>('')
+
 
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -125,6 +130,44 @@ export default function UserDashboard() {
         setEmail('')
         localStorage.removeItem('qr_user_email')
     }
+
+    const openQrPreview = async (qr: any) => {
+        setSelectedQr(qr);
+        const urlToEncode = qr.isDynamic 
+            ? `${window.location.origin}/go/${qr.id}` 
+            : qr.content;
+
+        try {
+            const dataUrl = await QRCode.toDataURL(urlToEncode, {
+                width: 800,
+                margin: 2,
+                color: {
+                    dark: qr.fgColor || '#000000',
+                    light: qr.bgColor || '#ffffff',
+                },
+                errorCorrectionLevel: qr.logoUrl ? 'H' : 'M'
+            });
+            
+            // If it has a logo, we would theoretically draw it on a canvas here
+            // For the dashboard preview, a clean QR without logo is usually sufficient quickly,
+            // but let's try to just show the base for now to ensure reliability.
+            setPreviewQrDataUrl(dataUrl);
+            
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    const downloadQr = () => {
+        if (!previewQrDataUrl) return;
+        const link = document.createElement('a');
+        link.download = `QR_${selectedQr?.name || 'Code'}.png`;
+        link.href = previewQrDataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
 
     useEffect(() => {
         const savedEmail = localStorage.getItem('qr_user_email')
@@ -435,14 +478,12 @@ export default function UserDashboard() {
                                 >
                                     <Trash2 size={16} />
                                 </button>
-                                <button className="btn" style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', flex: 1, background: 'rgba(255,255,255,0.05)' }} onClick={() => alert(`Conteúdo: ${qr.content}`)}>
-                                    Ver QR
-                                </button>
-                                <button className="btn" style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', flex: 1 }} onClick={() => alert('Em breve: Download em alta resolução')}>
-                                    Download
+                                <button className="btn" style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', flex: 1, background: 'rgba(255,255,255,0.05)' }} onClick={() => openQrPreview(qr)}>
+                                    <Eye size={16} style={{marginRight: '0.25rem'}}/> Ver QR
                                 </button>
                             </div>
                         </div>
+
                     ))}
                 </div>
             ) : (
@@ -450,6 +491,52 @@ export default function UserDashboard() {
                     <QrCode size={48} color="#1e293b" style={{ marginBottom: '1.5rem' }} />
                     <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Você ainda não gerou nenhum QR Code.</p>
                     <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn">Criar meu primeiro QR</button>
+                </div>
+            )}
+
+            {/* Modal de Preview do QR Code */}
+            {selectedQr && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }} onClick={() => setSelectedQr(null)}>
+                    <div className="glass-card" style={{ maxWidth: '400px', width: '90%', textAlign: 'center', position: 'relative' }} onClick={e => e.stopPropagation()}>
+                        <button 
+                            onClick={() => setSelectedQr(null)}
+                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                        >
+                            <X size={24} />
+                        </button>
+                        
+                        <h3 style={{ marginBottom: '0.5rem', paddingRight: '2rem' }}>{selectedQr.name}</h3>
+                        <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1.5rem', wordBreak: 'break-all' }}>
+                            {selectedQr.isDynamic ? `${window.location.origin}/go/${selectedQr.id}` : selectedQr.content}
+                        </p>
+
+                        {previewQrDataUrl ? (
+                            <img 
+                                src={previewQrDataUrl} 
+                                alt="QR Code Preview" 
+                                style={{ 
+                                    width: '100%', 
+                                    maxWidth: '250px', 
+                                    height: 'auto', 
+                                    borderRadius: '1rem',
+                                    marginBottom: '2rem',
+                                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                                }} 
+                            />
+                        ) : (
+                            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Carregando...</div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button className="btn" style={{ flex: 1, justifyContent: 'center' }} onClick={downloadQr}>
+                                <Download size={18} style={{ marginRight: '0.5rem' }} /> Baixar Imagem
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </main>
