@@ -320,7 +320,7 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
 
                     {type === 'PIX' && (
                         <>
-                            <input className="input" placeholder="Chave PIX (CPF, Email, Telefone, Aleatória)" value={pixKey} onChange={e => setPixKey(e.target.value)} />
+                            <input className="input" placeholder="Chave PIX (CPF/CNPJ, Email, Telefone, Aleatória)" value={pixKey} onChange={e => setPixKey(e.target.value)} />
                             <input className="input" placeholder="Nome do Recebedor" value={pixName} onChange={e => setPixName(e.target.value)} />
                             <input className="input" placeholder="Cidade" value={pixCity} onChange={e => setPixCity(e.target.value)} />
                             <input className="input" type="number" placeholder="Valor (opcional)" value={pixAmount} onChange={e => setPixAmount(e.target.value)} />

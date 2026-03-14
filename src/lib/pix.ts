@@ -17,8 +17,27 @@ export function generatePixPayload(params: PixParams): string {
 
     const { key, name, city, amount, description, transactionId = '***' } = params;
     
-    // Sanitize key (remove everything except alphanumeric and @.- for email keys)
-    const sanitizedKey = key.replace(/[^a-zA-Z0-9@.\-_]/g, '');
+    // Sanitize PIX Key correctly based on type
+    let sanitizedKey = key.trim();
+    if (sanitizedKey.includes('@')) {
+        // Email
+        sanitizedKey = sanitizedKey.replace(/\s/g, '');
+    } else if (/^[0-9a-fA-F]{8}-/.test(sanitizedKey)) {
+        // EVP (Random Key)
+        sanitizedKey = sanitizedKey.toLowerCase().replace(/[^a-f0-9-]/g, '');
+    } else {
+        // CPF, CNPJ, or Phone
+        const digitsOnly = sanitizedKey.replace(/\D/g, '');
+        if (sanitizedKey.startsWith('+')) {
+            sanitizedKey = '+' + digitsOnly;
+        } else if (digitsOnly.length === 11 || digitsOnly.length === 14) {
+            sanitizedKey = digitsOnly; // CPF or CNPJ
+        } else if (digitsOnly.length === 12 || digitsOnly.length === 13) {
+            sanitizedKey = '+' + digitsOnly; // Phone area code without plus
+        } else {
+            sanitizedKey = digitsOnly;
+        }
+    }
 
     const payloadFormatIndicator = '000201';
     const pointOfInitiationMethod = '010211'; // Static PIX
