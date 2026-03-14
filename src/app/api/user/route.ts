@@ -35,7 +35,14 @@ export async function GET(req: NextRequest) {
                     trialEndsAt,
                 },
                 include: {
-                    qrcodes: true
+                    qrcodes: {
+                        orderBy: { createdAt: 'desc' },
+                        include: {
+                            scansList: {
+                                orderBy: { scannedAt: 'asc' }
+                            }
+                        }
+                    }
                 }
             })
         }
