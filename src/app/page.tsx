@@ -200,9 +200,11 @@ export default function Home() {
                     <Check size={18} color="#10b981" /> <span>Todos os tipos de QR</span>
                   </div>
                 </div>
-                <button className="btn" style={{ width: '100%', marginTop: '2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-glass)' }}>
-                  Começar Agora
-                </button>
+                <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+                  <button className="btn" style={{ width: '100%', marginTop: '2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-glass)' }}>
+                    Começar Agora
+                  </button>
+                </Link>
               </div>
 
               {/* Premium Plan */}
@@ -229,9 +231,12 @@ export default function Home() {
                     <Check size={18} color="#10b981" /> <span>Alta Resolução (4k)</span>
                   </div>
                 </div>
-                <button className="btn" style={{ width: '100%', marginTop: '2rem' }}>
-                  Assinar Agora
-                </button>
+                
+                <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+                  <button className="btn" style={{ width: '100%', marginTop: '2rem' }}>
+                    Assinar Agora
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
