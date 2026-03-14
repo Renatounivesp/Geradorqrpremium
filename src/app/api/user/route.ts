@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 })
         }
 
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { email },
             include: {
                 qrcodes: {
@@ -19,8 +19,20 @@ export async function GET(req: NextRequest) {
             }
         })
 
+        // If user doesn't exist, create a new one (Seamless Sign Up/Login)
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+            const trialEndsAt = new Date()
+            trialEndsAt.setDate(trialEndsAt.getDate() + 40) // 40 days trial
+
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    trialEndsAt,
+                },
+                include: {
+                    qrcodes: true
+                }
+            })
         }
 
         return NextResponse.json(user)

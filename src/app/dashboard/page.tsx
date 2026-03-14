@@ -136,19 +136,20 @@ export default function UserDashboard() {
                         <input
                             className="input"
                             type="email"
-                            placeholder="Seu e-mail cadastrado"
+                            placeholder="Seu melhor e-mail"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
                             style={{ marginBottom: '1rem' }}
                         />
-                        <button className="btn" style={{ width: '100%' }} disabled={loading}>
-                            {loading ? 'Entrando...' : 'Entrar'}
+                        <button className="btn" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
+                            {loading ? 'Entrando...' : 'Entrar / Cadastrar'}
                         </button>
                     </form>
                     <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#94a3b8' }}>
-                        Use o e-mail que você usou para gerar seus QR Codes.
+                        Se for seu primeiro acesso, uma conta será criada automaticamente com 40 dias grátis!
                     </p>
+
                     <Link href="/" style={{ display: 'block', marginTop: '1rem', color: 'var(--primary)', fontSize: '0.8rem', textDecoration: 'none' }}>
                         Voltar para a Home
                     </Link>
