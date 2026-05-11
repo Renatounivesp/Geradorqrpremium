@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         // If user doesn't exist, create a new one (Seamless Sign Up/Login)
         if (!user) {
             const trialEndsAt = new Date()
-            trialEndsAt.setDate(trialEndsAt.getDate() + 40) // 40 days trial
+            trialEndsAt.setDate(trialEndsAt.getDate() + 10) // 10 days trial
 
             user = await prisma.user.create({
                 data: {

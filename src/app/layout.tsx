@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "QR Premium | Gerador de QR Code Profissional - Pix, WhatsApp e Wi-Fi",
-  description: "Crie QR Codes profissionais em alta resolução para Pix, WhatsApp, redes sociais e muito mais. Teste grátis por 40 dias com gestão completa no dashboard.",
+  description: "Crie QR Codes profissionais em alta resolução para Pix, WhatsApp, redes sociais e muito mais. Teste grátis por 10 dias com gestão completa no dashboard.",
   keywords: ["gerador de qr code", "qr code pix", "qr code whatsapp", "gerar qr code profissional", "qr premium"],
   authors: [{ name: "QR Premium" }],
   openGraph: {

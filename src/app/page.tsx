@@ -120,7 +120,7 @@ export default function Home() {
               lineHeight: 1.6
             }}>
               Crie QR Codes profissionais para Pix, WhatsApp, Wi-Fi e mais. 
-              <strong> 40 dias gratuitos</strong> para você testar todas as funcionalidades.
+              <strong> 10 dias gratuitos</strong> para você testar todas as funcionalidades.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
               <Link href="/dashboard" className="btn" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
@@ -194,7 +194,7 @@ export default function Home() {
                 <p style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '2rem' }}>R$ 0</p>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                    <Check size={18} color="#10b981" /> <span>40 dias de acesso total</span>
+                    <Check size={18} color="#10b981" /> <span>10 dias de acesso total</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
                     <Check size={18} color="#10b981" /> <span>Todos os tipos de QR</span>

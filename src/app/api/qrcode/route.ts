@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         })
 
         if (!user) {
-            const trialDays = 40
+            const trialDays = 10
             const trialEndsAt = new Date()
             trialEndsAt.setDate(trialEndsAt.getDate() + trialDays)
 

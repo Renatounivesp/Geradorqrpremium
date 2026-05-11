@@ -242,7 +242,7 @@ export default function UserDashboard() {
                         </button>
                     </form>
                     <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#94a3b8' }}>
-                        Se for seu primeiro acesso, uma conta será criada automaticamente com 40 dias grátis!
+                        Se for seu primeiro acesso, uma conta será criada automaticamente com 10 dias grátis!
                     </p>
 
                     <Link href="/" style={{ display: 'block', marginTop: '1rem', color: 'var(--primary)', fontSize: '0.8rem', textDecoration: 'none' }}>
