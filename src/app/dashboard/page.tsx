@@ -60,7 +60,8 @@ export default function UserDashboard() {
                     copypaste: data.pix_copypaste
                 })
             } else {
-                alert(data.error || 'Erro ao gerar pagamento')
+                const errorData = await res.json();
+                alert('Erro ao gerar pagamento: ' + (errorData.details || errorData.error || 'Erro desconhecido'));
             }
         } catch (error) {
             console.error('Subscription error', error)
