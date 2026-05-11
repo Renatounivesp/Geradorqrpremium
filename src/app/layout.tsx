@@ -28,6 +28,9 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  verification: {
+    google: "1c827f7e269a68c1",
   }
 };
 
