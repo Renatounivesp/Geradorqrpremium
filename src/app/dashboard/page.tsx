@@ -60,11 +60,11 @@ export default function UserDashboard() {
                     copypaste: data.pix_copypaste
                 })
             } else {
-                const errorData = await res.json();
-                alert('Erro ao gerar pagamento: ' + (errorData.details || errorData.error || 'Erro desconhecido'));
+                alert('Erro ao gerar pagamento: ' + (data.details || data.error || 'Erro desconhecido'));
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Subscription error', error)
+            alert('Erro na conexão: ' + error.message);
         } finally {
             setLoading(false)
         }
