@@ -21,6 +21,7 @@ export default function UserDashboard() {
     const [deviceData, setDeviceData] = useState<any[]>([])
     const [selectedQr, setSelectedQr] = useState<any | null>(null)
     const [previewQrDataUrl, setPreviewQrDataUrl] = useState<string>('')
+    const [paymentData, setPaymentData] = useState<{ qrcode: string, copypaste: string } | null>(null)
 
 
 
@@ -47,19 +48,19 @@ export default function UserDashboard() {
     const handleSubscribe = async () => {
         setLoading(true)
         try {
-            const res = await fetch('/api/user/subscribe', {
+            const res = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: user.email })
             })
             const data = await res.json()
             if (res.ok) {
-                setUser(data.user)
-                setMessage('Assinatura ativada com sucesso!')
-                // Force refresh user data
-                const refreshRes = await fetch(`/api/user?email=${user.email}`)
-                const refreshData = await refreshRes.json()
-                setUser(refreshData)
+                setPaymentData({
+                    qrcode: data.pix_qrcode,
+                    copypaste: data.pix_copypaste
+                })
+            } else {
+                alert(data.error || 'Erro ao gerar pagamento')
             }
         } catch (error) {
             console.error('Subscription error', error)
@@ -535,6 +536,64 @@ export default function UserDashboard() {
                             <button className="btn" style={{ flex: 1, justifyContent: 'center' }} onClick={downloadQr}>
                                 <Download size={18} style={{ marginRight: '0.5rem' }} /> Baixar Imagem
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Modal de Pagamento Pix */}
+            {paymentData && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001
+                }} onClick={() => setPaymentData(null)}>
+                    <div className="glass-card" style={{ maxWidth: '400px', width: '90%', textAlign: 'center', position: 'relative' }} onClick={e => e.stopPropagation()}>
+                        <button 
+                            onClick={() => setPaymentData(null)}
+                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                        >
+                            <X size={24} />
+                        </button>
+                        
+                        <h3 style={{ marginBottom: '1.5rem' }}>Pagamento via Pix</h3>
+                        <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.5rem' }}>
+                            Escaneie o QR Code abaixo ou copie o código para pagar a sua assinatura de <strong>R$ 9,90</strong>.
+                        </p>
+
+                        <div style={{ background: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', marginBottom: '1.5rem' }}>
+                            <img 
+                                src={`data:image/png;base64,${paymentData.qrcode}`} 
+                                alt="Pix QR Code" 
+                                style={{ width: '200px', height: '200px' }} 
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '2rem' }}>
+                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem', textAlign: 'left' }}>Código Copia e Cola:</p>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input 
+                                    className="input" 
+                                    readOnly 
+                                    value={paymentData.copypaste} 
+                                    style={{ margin: 0, fontSize: '0.7rem', height: 'auto', padding: '0.5rem' }} 
+                                />
+                                <button 
+                                    className="btn" 
+                                    style={{ padding: '0.5rem', height: 'auto' }}
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(paymentData.copypaste);
+                                        alert('Código copiado!');
+                                    }}
+                                >
+                                    Copiar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                <CheckCircle size={16} /> Após o pagamento, seu acesso será liberado automaticamente em alguns segundos.
+                            </p>
                         </div>
                     </div>
                 </div>
