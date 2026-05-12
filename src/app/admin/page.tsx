@@ -85,6 +85,29 @@ export default function AdminDashboard() {
         }
     }
 
+    const handleDeleteUser = async (userId: string, userName: string) => {
+        if (!confirm(`Tem certeza que deseja excluir o usuário ${userName}? Esta ação é irreversível e excluirá todos os seus QR Codes.`)) {
+            return
+        }
+
+        try {
+            const res = await fetch(`/api/admin/users?userId=${userId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': password }
+            })
+
+            if (res.ok) {
+                setUsers(prev => prev.filter(u => u.id !== userId))
+            } else {
+                const data = await res.json()
+                alert(data.error || 'Erro ao excluir usuário')
+            }
+        } catch (error) {
+            console.error('Error deleting user', error)
+        }
+    }
+
+
     const handleLogout = () => {
         localStorage.removeItem('admin_pass')
         setIsAuthenticated(false)
@@ -219,7 +242,23 @@ export default function AdminDashboard() {
                                                 </button>
                                             </>
                                         )}
+                                        <button
+                                            className="btn"
+                                            style={{ 
+                                                padding: '0.5rem', 
+                                                fontSize: '0.75rem', 
+                                                background: 'rgba(239, 68, 68, 0.1)', 
+                                                color: '#ef4444',
+                                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                minWidth: '40px'
+                                            }}
+                                            onClick={() => handleDeleteUser(user.id, user.name || user.email)}
+                                            title="Excluir Usuário"
+                                        >
+                                            🗑️
+                                        </button>
                                     </td>
+
                                 </tr>
                             )
                         })}
