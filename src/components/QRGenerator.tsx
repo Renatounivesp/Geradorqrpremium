@@ -16,7 +16,10 @@ import {
     MessageCircle,
     Mail,
     MapPin,
-    Send
+    Send,
+    ChevronRight,
+    Palette,
+    Settings
 } from 'lucide-react';
 import { generatePixPayload } from '@/lib/pix';
 
@@ -76,7 +79,7 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
 
     const generate = async () => {
         if (!email) {
-            setError('Por favor, insira seu e-mail para continuar.');
+            setError('Por favor, faça login ou insira seu e-mail para salvar.');
             return;
         }
 
@@ -86,9 +89,7 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
 
         try {
             if (type === 'PIX') {
-                if (!pixKey || !pixName || !pixCity) {
-                    throw new Error('Preencha os campos obrigatórios do PIX.');
-                }
+                if (!pixKey || !pixName || !pixCity) throw new Error('Preencha os campos obrigatórios do PIX.');
                 finalContent = generatePixPayload({
                     key: pixKey,
                     name: pixName,
@@ -122,7 +123,6 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
                 return;
             }
 
-            // Call backend to save and check trial
             const response = await fetch('/api/qrcode', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -140,38 +140,27 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
             });
 
             const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Erro ao processar sua solicitação.');
-            }
+            if (!response.ok) throw new Error(result.error || 'Erro ao processar.');
 
             const dataUrl = await QRCode.toDataURL(finalContent, {
                 width: 1000,
                 margin: 4,
-                color: {
-                    dark: fgColor,
-                    light: bgColor,
-                },
+                color: { dark: fgColor, light: bgColor },
                 errorCorrectionLevel: logoUrl ? 'H' : 'M'
             });
 
-            // If logo exists, overlay it using a canvas
             if (logoUrl) {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                const img = new Image();
                 const qrImg = new Image();
-                
                 await new Promise((resolve, reject) => {
                     qrImg.onload = resolve;
                     qrImg.onerror = reject;
                     qrImg.src = dataUrl;
                 });
-
                 canvas.width = qrImg.width;
                 canvas.height = qrImg.height;
                 ctx?.drawImage(qrImg, 0, 0);
-
                 const logo = new Image();
                 await new Promise((resolve, reject) => {
                     logo.crossOrigin = "anonymous";
@@ -179,18 +168,14 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
                     logo.onerror = reject;
                     logo.src = logoUrl;
                 });
-
                 const logoSize = canvas.width * 0.2;
                 const x = (canvas.width - logoSize) / 2;
                 const y = (canvas.height - logoSize) / 2;
-
-                // Draw a white background for the logo
                 if (ctx) {
                     ctx.fillStyle = bgColor;
                     ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
                     ctx.drawImage(logo, x, y, logoSize, logoSize);
                 }
-                
                 setQrCode(canvas.toDataURL());
             } else {
                 setQrCode(dataUrl);
@@ -205,12 +190,10 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
 
     const processAI = (prompt: string) => {
         setLoading(true);
-        // Simulation of AI processing
         setTimeout(() => {
             const lower = prompt.toLowerCase();
             if (lower.includes('pix')) {
                 setType('PIX');
-                // Simple extraction logic
                 const keyMatch = prompt.match(/[0-9]{11}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
                 if (keyMatch) setPixKey(keyMatch[0]);
                 setPixName('Usuário AI');
@@ -232,271 +215,150 @@ export default function QRGenerator({ defaultEmail = '', onGenerated }: { defaul
     };
 
     return (
-        <div className="glass-card" style={{ maxWidth: '800px', margin: '2rem auto' }}>
-            {/* User Identification Section */}
-            <div style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="glass-card" style={{ maxWidth: '900px', margin: '0 auto', background: 'rgba(15, 23, 42, 0.4)', padding: '2.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
                 <div>
-                    <label style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>Seu E-mail (necessário para trial)</label>
-                    <input
-                        className="input"
-                        type="email"
-                        placeholder="exemplo@email.com"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        style={{ margin: 0 }}
-                    />
-                </div>
-                <div>
-                    <label style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>Nome do QR (opcional)</label>
-                    <input
-                        className="input"
-                        placeholder="Ex: Wi-Fi da Loja"
-                        value={qrName}
-                        onChange={e => setQrName(e.target.value)}
-                        style={{ margin: 0 }}
-                    />
-                </div>
-            </div>
+                    {/* Identification */}
+                    <div style={{ marginBottom: '2.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                            <Settings size={18} color="var(--primary)" />
+                            <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Identificação</h4>
+                        </div>
+                        <input className="input" placeholder="Nome do QR Code (ex: Cardápio Digital)" value={qrName} onChange={e => setQrName(e.target.value)} />
+                        {!defaultEmail && (
+                            <input className="input" type="email" placeholder="Seu e-mail" value={email} onChange={e => setEmail(e.target.value)} />
+                        )}
+                    </div>
 
-            {/* Dynamic QR Toggle */}
-            <div className="glass-card" style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(99, 102, 241, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ color: 'var(--primary)' }}><Sparkles size={24} /></div>
-                    <div>
-                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.9rem' }}>QR Code Dinâmico (Recomendado)</p>
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Permite editar o link depois de impresso e rastrear acessos.</p>
+                    {/* Dynamic Toggle */}
+                    <div style={{ marginBottom: '2.5rem', padding: '1.25rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '1.25rem', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <Sparkles size={20} color="var(--primary)" />
+                            <div>
+                                <p style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem' }}>Modo Dinâmico</p>
+                                <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b' }}>Edite o link depois de impresso</p>
+                            </div>
+                        </div>
+                        <div onClick={() => setIsDynamic(!isDynamic)} style={{ width: '44px', height: '24px', background: isDynamic ? 'var(--primary)' : '#1e293b', borderRadius: '12px', padding: '3px', cursor: 'pointer', transition: 'all 0.3s', display: 'flex', justifyContent: isDynamic ? 'flex-end' : 'flex-start' }}>
+                            <div style={{ width: '18px', height: '18px', background: 'white', borderRadius: '50%' }} />
+                        </div>
+                    </div>
+
+                    {/* Types */}
+                    <div className="qr-type-selector" style={{ marginBottom: '2.5rem' }}>
+                        {[
+                            { id: 'URL', label: 'Link', icon: <LinkIcon size={18} /> },
+                            { id: 'PIX', label: 'PIX', icon: <CreditCard size={18} /> },
+                            { id: 'WIFI', label: 'WiFi', icon: <Wifi size={18} /> },
+                            { id: 'WHATSAPP', label: 'WhatsApp', icon: <MessageCircle size={18} /> },
+                            { id: 'VCARD', label: 'Contato', icon: <User size={18} /> },
+                            { id: 'AI', label: 'AI', icon: <Sparkles size={18} /> },
+                        ].map((t) => (
+                            <button key={t.id} onClick={() => setType(t.id as QRType)} className={`qr-type-btn ${type === t.id ? 'active' : ''}`} style={{ padding: '0.75rem' }}>
+                                {t.icon}
+                                <span style={{ fontSize: '0.7rem', marginTop: '0.4rem', fontWeight: 700 }}>{t.label}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Inputs based on type */}
+                    <div style={{ marginBottom: '2.5rem' }}>
+                        {type === 'URL' && <input className="input" placeholder="https://exemplo.com" value={content} onChange={e => setContent(e.target.value)} />}
+                        {type === 'PIX' && (
+                            <>
+                                <input className="input" placeholder="Chave PIX" value={pixKey} onChange={e => setPixKey(e.target.value)} />
+                                <input className="input" placeholder="Nome" value={pixName} onChange={e => setPixName(e.target.value)} />
+                                <input className="input" placeholder="Cidade" value={pixCity} onChange={e => setPixCity(e.target.value)} />
+                            </>
+                        )}
+                        {type === 'WIFI' && (
+                            <>
+                                <input className="input" placeholder="SSID (Nome da Rede)" value={ssid} onChange={e => setSsid(e.target.value)} />
+                                <input className="input" type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} />
+                            </>
+                        )}
+                        {type === 'WHATSAPP' && (
+                            <>
+                                <input className="input" placeholder="Número (ex: 5511...)" value={phone} onChange={e => setPhone(e.target.value)} />
+                                <textarea className="input" placeholder="Mensagem inicial..." value={message} onChange={e => setMessage(e.target.value)} style={{ minHeight: '80px' }} />
+                            </>
+                        )}
+                        {type === 'VCARD' && (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                    <input className="input" placeholder="Nome" value={vFirstName} onChange={e => setVFirstName(e.target.value)} />
+                                    <input className="input" placeholder="Sobrenome" value={vLastName} onChange={e => setVLastName(e.target.value)} />
+                                </div>
+                                <input className="input" placeholder="Telefone" value={vPhone} onChange={e => setVPhone(e.target.value)} />
+                            </>
+                        )}
+                        {type === 'AI' && (
+                            <textarea className="input" placeholder="Fale com a IA..." style={{ minHeight: '100px' }} value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} />
+                        )}
                     </div>
                 </div>
-                <div 
-                    onClick={() => setIsDynamic(!isDynamic)}
-                    style={{ 
-                        width: '50px', 
-                        height: '26px', 
-                        background: isDynamic ? 'var(--primary)' : 'rgba(255,255,255,0.1)', 
-                        borderRadius: '20px', 
-                        padding: '3px', 
-                        cursor: 'pointer',
-                        transition: 'all 0.3s',
-                        display: 'flex',
-                        justifyContent: isDynamic ? 'flex-end' : 'flex-start'
-                    }}
-                >
-                    <div style={{ width: '20px', height: '20px', background: 'white', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
-                </div>
-            </div>
 
-            <div className="qr-type-selector" style={{ marginBottom: '2rem' }}>
-                {[
-                    { id: 'URL', label: 'Link/Texto', icon: <LinkIcon size={20} /> },
-                    { id: 'PIX', label: 'PIX', icon: <CreditCard size={20} /> },
-                    { id: 'WIFI', label: 'WiFi', icon: <Wifi size={20} /> },
-                    { id: 'PHONE', label: 'Telefone', icon: <Smartphone size={20} /> },
-                    { id: 'VCARD', label: 'Contato', icon: <User size={20} /> },
-                    { id: 'CNPJ', label: 'Empresa', icon: <Building size={20} /> },
-                    { id: 'WHATSAPP', label: 'WhatsApp', icon: <MessageCircle size={20} /> },
-                    { id: 'SMS', label: 'SMS', icon: <Send size={20} /> },
-                    { id: 'EMAIL', label: 'E-mail', icon: <Mail size={20} /> },
-                    { id: 'LOCATION', label: 'Local.', icon: <MapPin size={20} /> },
-                    { id: 'AI', label: 'AI Assist.', icon: <Sparkles size={20} /> },
-                ].map((t) => (
-                    <button
-                        key={t.id}
-                        onClick={() => setType(t.id as QRType)}
-                        className={`qr-type-btn ${type === t.id ? 'active' : ''}`}
-                    >
-                        {t.icon}
-                        <span style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: 'bold' }}>{t.label}</span>
-                    </button>
-                ))}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: qrCode ? '1fr 1fr' : '1fr', gap: '2rem' }}>
                 <div>
-                    {type === 'URL' && (
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="Digite a URL ou texto..."
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                        />
-                    )}
-
-                    {type === 'PIX' && (
-                        <>
-                            <input className="input" placeholder="Chave PIX (CPF/CNPJ, Email, Telefone, Aleatória)" value={pixKey} onChange={e => setPixKey(e.target.value)} />
-                            <input className="input" placeholder="Nome do Recebedor" value={pixName} onChange={e => setPixName(e.target.value)} />
-                            <input className="input" placeholder="Cidade" value={pixCity} onChange={e => setPixCity(e.target.value)} />
-                            <input className="input" type="number" placeholder="Valor (opcional)" value={pixAmount} onChange={e => setPixAmount(e.target.value)} />
-                            <input className="input" placeholder="Descrição (opcional)" value={pixDesc} onChange={e => setPixDesc(e.target.value)} />
-                        </>
-                    )}
-
-                    {type === 'WIFI' && (
-                        <>
-                            <input className="input" placeholder="Nome da Rede (SSID)" value={ssid} onChange={e => setSsid(e.target.value)} />
-                            <input className="input" type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} />
-                            <select className="input" value={encryption} onChange={e => setEncryption(e.target.value)} style={{ background: '#020617' }}>
-                                <option value="WPA">WPA/WPA2</option>
-                                <option value="WEP">WEP</option>
-                                <option value="nopass">Sem senha</option>
-                            </select>
-                        </>
-                    )}
-
-                    {type === 'PHONE' && (
-                        <input className="input" placeholder="Número de Telefone (ex: 5511...)" value={content} onChange={e => setContent(e.target.value)} />
-                    )}
-
-                    {type === 'VCARD' && (
-                        <>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                <input className="input" placeholder="Nome" value={vFirstName} onChange={e => setVFirstName(e.target.value)} />
-                                <input className="input" placeholder="Sobrenome" value={vLastName} onChange={e => setVLastName(e.target.value)} />
-                            </div>
-                            <input className="input" placeholder="Telefone" value={vPhone} onChange={e => setVPhone(e.target.value)} />
-                            <input className="input" placeholder="E-mail" value={vEmail} onChange={e => setVEmail(e.target.value)} />
-                        </>
-                    )}
-
-                    {type === 'CNPJ' && (
-                        <input className="input" placeholder="CNPJ (apenas números)" value={cnpj} onChange={e => setCnpj(e.target.value)} />
-                    )}
-                    
-                    {type === 'WHATSAPP' && (
-                        <>
-                            <input className="input" placeholder="Número do WhatsApp (ex: 5511...)" value={phone} onChange={e => setPhone(e.target.value)} />
-                            <textarea className="input" placeholder="Mensagem pré-definida" value={message} onChange={e => setMessage(e.target.value)} style={{ minHeight: '80px' }} />
-                        </>
-                    )}
-
-                    {type === 'SMS' && (
-                        <>
-                            <input className="input" placeholder="Número do Telefone (ex: 5511...)" value={phone} onChange={e => setPhone(e.target.value)} />
-                            <textarea className="input" placeholder="Mensagem SMS" value={message} onChange={e => setMessage(e.target.value)} style={{ minHeight: '80px' }} />
-                        </>
-                    )}
-
-                    {type === 'EMAIL' && (
-                        <>
-                            <input className="input" placeholder="Para (e-mail)" value={vEmail} onChange={e => setVEmail(e.target.value)} />
-                            <input className="input" placeholder="Assunto" value={subject} onChange={e => setSubject(e.target.value)} />
-                            <textarea className="input" placeholder="Corpo do e-mail" value={body} onChange={e => setBody(e.target.value)} style={{ minHeight: '80px' }} />
-                        </>
-                    )}
-
-                    {type === 'LOCATION' && (
-                        <>
-                            <input className="input" placeholder="Latitude" value={latitude} onChange={e => setLatitude(e.target.value)} />
-                            <input className="input" placeholder="Longitude" value={longitude} onChange={e => setLongitude(e.target.value)} />
-                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '-0.5rem', marginBottom: '1rem' }}>
-                                Dica: Obtenha as coordenadas no Google Maps.
-                            </p>
-                        </>
-                    )}
-
-                    {type === 'AI' && (
-                        <textarea
-                            className="input"
-                            placeholder="Fale com a IA: 'Quero um pix de 50 reais para a chave email@teste.com nome João em SP'"
-                            style={{ minHeight: '120px' }}
-                            value={aiPrompt}
-                            onChange={e => setAiPrompt(e.target.value)}
-                        />
-                    )}
-
-                    {/* Customization Section */}
-                    <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)' }}>
-                        <p style={{ margin: '0 0 1rem 0', fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Sparkles size={16} /> Personalização
-                        </p>
+                    {/* Customization */}
+                    <div className="glass-card" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', marginBottom: '2rem', border: '1px solid var(--border-glass)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                            <Palette size={18} color="var(--secondary)" />
+                            <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Design & Estilo</h4>
+                        </div>
                         
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                             <div>
-                                <label style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.4rem' }}>Cor do QR</label>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <input 
-                                        type="color" 
-                                        value={fgColor} 
-                                        onChange={e => setFgColor(e.target.value)}
-                                        style={{ width: '100%', height: '38px', borderRadius: '0.5rem', border: '1px solid var(--border-glass)', background: 'transparent', cursor: 'pointer' }}
-                                    />
-                                </div>
+                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Cor do QR</label>
+                                <input type="color" value={fgColor} onChange={e => setFgColor(e.target.value)} style={{ width: '100%', height: '42px', borderRadius: '0.75rem', border: '1px solid var(--border-glass)', background: 'transparent', cursor: 'pointer' }} />
                             </div>
                             <div>
-                                <label style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.4rem' }}>Fundo</label>
-                                <input 
-                                    type="color" 
-                                    value={bgColor} 
-                                    onChange={e => setBgColor(e.target.value)}
-                                    style={{ width: '100%', height: '38px', borderRadius: '0.5rem', border: '1px solid var(--border-glass)', background: 'transparent', cursor: 'pointer' }}
-                                />
+                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Fundo</label>
+                                <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} style={{ width: '100%', height: '42px', borderRadius: '0.75rem', border: '1px solid var(--border-glass)', background: 'transparent', cursor: 'pointer' }} />
                             </div>
                         </div>
 
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.4rem' }}>URL do Logo (ex: https://.../logo.png)</label>
-                            <input 
-                                className="input" 
-                                placeholder="https://exemplo.com/seu-logo.png" 
-                                value={logoUrl} 
-                                onChange={e => setLogoUrl(e.target.value)}
-                                style={{ margin: 0 }}
-                            />
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>URL do Logo Central</label>
+                            <input className="input" placeholder="https://.../logo.png" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} style={{ marginBottom: 0 }} />
                         </div>
 
                         <div>
-                            <label style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.4rem' }}>Estilo da Moldura</label>
-                            <select 
-                                className="input" 
-                                value={frameStyle} 
-                                onChange={e => setFrameStyle(e.target.value)} 
-                                style={{ margin: 0, background: '#020617' }}
-                            >
+                            <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Estilo de Moldura</label>
+                            <select className="input" value={frameStyle} onChange={e => setFrameStyle(e.target.value)} style={{ background: '#0f172a', marginBottom: 0 }}>
                                 <option value="none">Sem Moldura</option>
-                                <option value="simple">Borda Simples</option>
-                                <option value="rounded">Borda Arredondada</option>
-                                <option value="thick">Borda Grossa</option>
-                                <option value="glow">Efeito Brilho</option>
+                                <option value="simple">Borda Fina</option>
+                                <option value="rounded">Arredondada</option>
+                                <option value="thick">Borda Larga</option>
+                                <option value="glow">Brilho Neon</option>
                             </select>
                         </div>
                     </div>
 
                     {error && (
-                        <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <AlertCircle size={18} />
-                            <span style={{ fontSize: '0.85rem' }}>{error}</span>
+                        <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', marginBottom: '1.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <AlertCircle size={16} /> {error}
                         </div>
                     )}
 
-                    <button className="btn" style={{ width: '100%' }} onClick={generate} disabled={loading}>
-                        {loading ? 'Processando...' : (type === 'AI' ? 'Analisar com IA' : 'Gerar QR Code')}
+                    <button className="btn" style={{ width: '100%', height: '54px', fontSize: '1rem' }} onClick={generate} disabled={loading}>
+                        {loading ? 'Processando...' : 'Gerar & Salvar QR Code'}
+                        {!loading && <ChevronRight size={20} />}
                     </button>
                 </div>
-
-                {qrCode && (
-                    <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                        <div 
-                            style={{ 
-                                background: bgColor, 
-                                padding: frameStyle === 'none' ? '1rem' : '2rem', 
-                                borderRadius: frameStyle === 'rounded' ? '2.5rem' : '1rem',
-                                border: frameStyle === 'simple' ? '2px solid' + fgColor : 
-                                        frameStyle === 'thick' ? '8px solid' + fgColor : 'none',
-                                boxShadow: frameStyle === 'glow' ? `0 0 20px ${fgColor}80` : 'none'
-                            }}
-                        >
-                            <img src={qrCode} alt="QR Code" style={{ maxWidth: '100%', height: 'auto', borderRadius: frameStyle === 'rounded' ? '1.5rem' : '0' }} />
-                        </div>
-                        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
-                            <a href={qrCode} download={`qrcode-${type.toLowerCase()}.png`} className="btn" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Download size={18} />
-                                PNG
-                            </a>
-                        </div>
-                    </div>
-                )}
             </div>
+
+            {qrCode && (
+                <div className="animate-fade-in" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--border-glass)', textAlign: 'center' }}>
+                    <div style={{ display: 'inline-block', background: bgColor, padding: frameStyle === 'none' ? '1rem' : '2rem', borderRadius: frameStyle === 'rounded' ? '3rem' : '1.5rem', border: frameStyle === 'simple' ? '2px solid' + fgColor : frameStyle === 'thick' ? '8px solid' + fgColor : 'none', boxShadow: frameStyle === 'glow' ? `0 0 30px ${fgColor}60` : '0 20px 50px rgba(0,0,0,0.3)' }}>
+                        <img src={qrCode} alt="QR Code" style={{ width: '280px', height: '280px', borderRadius: frameStyle === 'rounded' ? '2rem' : '0' }} />
+                    </div>
+                    <div style={{ marginTop: '2rem' }}>
+                        <a href={qrCode} download={`qrcode.png`} className="btn">
+                            <Download size={20} /> Baixar PNG
+                        </a>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

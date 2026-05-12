@@ -13,17 +13,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QR Premium | Gerador de QR Code Profissional - Pix, WhatsApp e Wi-Fi",
-  description: "Crie QR Codes profissionais em alta resolução para Pix, WhatsApp, redes sociais e muito mais. Teste grátis por 10 dias com gestão completa no dashboard.",
+  title: "QR Premium | Seus QR Codes em outro nível ✨",
+  description: "Crie QR Codes profissionais e personalizados para seu negócio. Pix, WhatsApp e muito mais com design premium! 🚀",
   keywords: ["gerador de qr code", "qr code pix", "qr code whatsapp", "gerar qr code profissional", "qr premium"],
   authors: [{ name: "QR Premium" }],
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
   openGraph: {
-    title: "QR Premium | Gerador de QR Code Profissional",
-    description: "Crie QR Codes profissionais para o seu negócio em segundos.",
+    title: "QR Premium | Seus QR Codes em outro nível ✨",
+    description: "Crie QR Codes profissionais e personalizados para seu negócio. Pix, WhatsApp e muito mais com design premium! 🚀",
     url: "https://geradorqrpremium.vercel.app",
     siteName: "QR Premium",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "QR Premium - Gerador de QR Code Profissional",
+      },
+    ],
     locale: "pt_BR",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QR Premium | Seus QR Codes em outro nível ✨",
+    description: "Crie QR Codes profissionais e personalizados para seu negócio.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
